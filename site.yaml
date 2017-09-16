@@ -1,0 +1,52 @@
+- hosts: pizero
+  become: yes
+
+  tasks:
+  - name: Install supervisor
+    apt:
+      name: supervisor
+      state: present
+
+  - name: Start supervisor
+    service:
+      name: supervisor
+      state: started
+      enabled: yes
+
+  - name: create installation folder
+    file: path=/var/opt/baby_predict state=directory
+
+  - name: copy requirements file
+    copy: src=requirements.txt dest=/var/opt/baby_predict/ mode=ug+rx
+
+  - name: install python requirements
+    pip: requirements=/var/opt/baby_predict/requirements.txt
+
+  - name: copy secrets
+    copy: src=secrets.py dest=/var/opt/baby_predict/ mode=ug+rx
+    notify: restart listener
+
+  - name: copy charting module
+    copy: src=food_chart.py dest=/var/opt/baby_predict/ mode=ug+rx
+    notify: restart listener
+
+  - name: copy feeding model module
+    copy: src=food_model.py dest=/var/opt/baby_predict/ mode=ug+rx
+    notify: restart listener
+
+  - name: copy telegram listener
+    copy: src=listener.py dest=/var/opt/baby_predict/ mode=ug+rx
+    notify: restart listener
+
+  - name: copy supervisor config
+    copy: src=telegram-listener.conf dest=/etc/supervisor/conf.d/
+    notify: reload supervisor
+
+  handlers:
+  # This gets called whenever a task needs to restart supervisor with an updated
+  # config
+  - name: reload supervisor
+    service: name=supervisor state=restarted
+
+  - name: restart listener
+    shell: supervisorctl restart telegram_listener

@@ -1,0 +1,1 @@
+Install with `ansible-playbook site.yaml -i hosts`
