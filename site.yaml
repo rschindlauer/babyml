@@ -1,10 +1,20 @@
-- hosts: pizero
+- hosts: pi
   become: yes
 
   tasks:
   - name: Install supervisor
     apt:
       name: supervisor
+      state: present
+
+  - name: Install pip
+    apt:
+      name: python-pip
+      state: present
+
+  - name: Install pandas
+    apt:
+      name: python-pandas
       state: present
 
   - name: Start supervisor
@@ -14,29 +24,29 @@
       enabled: yes
 
   - name: create installation folder
-    file: path=/var/opt/baby_predict state=directory
+    file: path=/var/opt/babyml state=directory
 
   - name: copy requirements file
-    copy: src=requirements.txt dest=/var/opt/baby_predict/ mode=ug+rx
+    copy: src=requirements.txt dest=/var/opt/babyml/ mode=ug+rx
 
   - name: install python requirements
-    pip: requirements=/var/opt/baby_predict/requirements.txt
+    pip: requirements=/var/opt/babyml/requirements.txt
 
   - name: copy secrets
-    copy: src=secrets.py dest=/var/opt/baby_predict/ mode=ug+rx
-    notify: restart listener
+    copy: src=secrets.py dest=/var/opt/babyml/ mode=ug+rx
+    notify: restart bot
 
   - name: copy charting module
-    copy: src=food_chart.py dest=/var/opt/baby_predict/ mode=ug+rx
-    notify: restart listener
+    copy: src=food_chart.py dest=/var/opt/babyml/ mode=ug+rx
+    notify: restart bot
 
   - name: copy feeding model module
-    copy: src=food_model.py dest=/var/opt/baby_predict/ mode=ug+rx
-    notify: restart listener
+    copy: src=food_model.py dest=/var/opt/babyml/ mode=ug+rx
+    notify: restart bot
 
-  - name: copy telegram listener
-    copy: src=listener.py dest=/var/opt/baby_predict/ mode=ug+rx
-    notify: restart listener
+  - name: copy telegram bot
+    copy: src=cakesbot.py dest=/var/opt/babyml/ mode=ug+rx
+    notify: restart bot
 
   - name: copy supervisor config
     copy: src=telegram-listener.conf dest=/etc/supervisor/conf.d/
@@ -48,5 +58,5 @@
   - name: reload supervisor
     service: name=supervisor state=restarted
 
-  - name: restart listener
-    shell: supervisorctl restart telegram_listener
+  - name: restart bot
+    shell: supervisorctl restart cakesbot
