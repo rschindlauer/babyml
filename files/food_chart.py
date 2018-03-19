@@ -28,11 +28,12 @@ def daily(filepath, day_range=7, chart_filename='lukey_eating'):
     df_all['Amount'] = df_all['Amount'].str[:-4]
     df_all['Amount'] = df_all['Amount'].astype(float)
 
-    df_all['day'] = df_all.index.dayofyear.max() - df_all.index.dayofyear
+    # get date for each row, as a timedelta relative to the latest one
+    df_all['day'] = df_all.index.max().date() - df_all.index.date
+    # convert timedelta into int
+    df_all['day'] = df_all['day'].dt.days
 
-    # filter relevant days
-    minday = df_all.index.max().dayofyear - day_range
-    df = df_all[df_all.index.dayofyear > minday]
+    df = df_all[df_all['day'] < day_range]
 
     # we need that for the running sums:
     daily_sum = df.groupby(['day'])['Amount'].sum()
